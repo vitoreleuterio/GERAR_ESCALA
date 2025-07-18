@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Escala</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .grupo-select {
+      background-color: #dde1eb;
+      color: rgb(11, 11, 11);
+      border-radius: 5px;
+      padding: 8px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body style="background: #FFF;">
+
+<div class="container-fluid mt-3" style=" margin-left: auto; width: 2000px;">
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <select id="grupoSelect" class="form-select grupo-select" onchange="mudarGrupo()">
+        <option value="">Selecione o grupo: </option>
+
+        <option value="acolitos">Acólitos</option>
+        <option value="coroinhas">Coroinhas</option>
+        <option value="datashoW">DatashoW</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <input type="file" id="fileUpload" class="form-control" accept=".xlsx">
+    </div>
+    <div class="col-md-4">
+      <input type="text" id="tituloEscala" class="form-control" placeholder="Digite o mês da escala (ex: Julho)">
+    </div>
+    <div class="col-md-2">
+      <button onclick="carregarPlanilha()" class="btn btn-dark w-100">Gerar Escala</button>
+    </div>
+     <div class="col-md-2">
+      <button onclick="gerarPNG('dados')" class="btn btn-success w-100">BAIXAR ESCALA</button>
+    </div>
+  </div>
+
+  <div id="dados" style="width: 1700px !important; margin:auto;background-color: #FFF; padding: 4px;" >
+    <h3 class="text-center py-2 d-none"  style="background-color: #000; color: #fff; font-weight: bold; border-radius: 4px;" id="tituloDisplay" ></h3>
+  </div>
+</div>
+
+<script>
+    // Cores para cada grupo
+    const gruposCores = {
+      acolitos: {
+        headerBg: '#000000',
+        headerText: '#ffffff',
+        diaBg: '#f8f9fa',
+        diaText: '#000000',
+        semanaBg: '#ECECEC',
+        semanaText: '#000000'
+      },
+      coroinhas: {
+        headerBg: '#BE0579',
+        headerText: '#ffffff',
+        diaBg: '#e7f1ff',
+        diaText: '#BE0579',
+        semanaBg: '#BE0579',
+        semanaText: '#ffffff'
+      },
+      datasho: {
+        headerBg: '#dc3545',
+        headerText: '#ffffff',
+        diaBg: '#f8d7da',
+        diaText: '#dc3545',
+        semanaBg: '#dc3545',
+        semanaText: '#ffffff'
+      }
+    };
+
+    function mudarGrupo() {
+      const grupo = document.getElementById('grupoSelect').value;
+      document.getElementById('tituloDisplay').innerText = `ESCALA DE ${grupo.toUpperCase()}`;
+      
+      // Aplicar as cores quando gerar o calendário
+      if (localStorage.getItem('escala')) {
+        generateCalendar(JSON.parse(localStorage.getItem('escala')));
+      }
+    }
+
+    function gerarPNG(div) {
+      const element = document.getElementById(div);
+       const grupo = document.getElementById('grupoSelect').value;
+       const tituloEscala = document.getElementById('tituloEscala').value;
+
+       tituloEscala
+      // Configurações de alta qualidade
+      const scale = 3; // Fator de escala (3x para imagens nítidas)
+      const dpi = 300; // Resolução para impressão
+      const backgroundColor = '#ffffff'; // Fundo branco para melhor contraste
+      
+      // Calcular dimensões
+      const width = element.offsetWidth * scale;
+      const height = element.offsetHeight * scale;
+
+      // Criar canvas
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      // Opções do html2canvas
+      const options = {
+          canvas: canvas,
+          scale: scale,
+          dpi: dpi,
+          logging: true,
+          useCORS: true,
+          backgroundColor: backgroundColor,
+          letterRendering: true, // Crucial para texto nítido
+          allowTaint: true,
+          windowWidth: width,
+          windowHeight: height,
+          scrollX: 0,
+          scrollY: 0,
+          x: 0,
+          y: 0,
+          onclone: (clonedDoc) => {
+              // Garantir que o texto seja renderizado com fontes nítidas
+              clonedDoc.getElementById(div).style.fontSmoothing = 'antialiased';
+              clonedDoc.getElementById(div).style.webkitFontSmoothing = 'antialiased';
+          }
+      };
+
+      html2canvas(element, options).then(canvas => {
+          // Usar PNG para máxima qualidade (sem compressão)
+          const imgData = canvas.toDataURL("image/png", 2.0);
+          
+          const link = document.createElement("a");
+          link.download = grupo+'_'+tituloEscala+'.png'; // Formato PNG preserva qualidade
+          link.href = imgData;
+          link.click();
+      });
+    }
+  
+    function carregarPlanilha() {
+      const file = document.getElementById('fileUpload').files[0];
+      const titulo = document.getElementById('tituloEscala').value.trim();
+      const grupo = document.getElementById('grupoSelect').value;
+
+      if (!file || !titulo) {
+        alert('Selecione o arquivo e insira o título da escala.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        const escalaConvertida = converterParaFormatoInterno(json);
+
+        localStorage.setItem('escala', JSON.stringify(escalaConvertida));
+        document.getElementById("tituloDisplay").innerText = document.getElementById("tituloDisplay").outerText + ' - ' + titulo.toUpperCase();
+        generateCalendar(escalaConvertida);
+      };
+      reader.readAsArrayBuffer(file);
+      alert('Escala Gerada com Sucesso!')
+    }
+
+    function excelDateToJSDate(serial) {
+      const utc_days = Math.floor(serial - 25569); // 25569 = diferença entre 1/1/1900 (Excel) e 1/1/1970 (Unix)
+      const utc_value = utc_days * 86400; // segundos em um dia
+      const date_info = new Date(utc_value * 1000); // converte para milissegundos
+
+      // Adiciona +1 dia para corrigir a discrepância
+      const correctedDate = new Date(
+        date_info.getFullYear(),
+        date_info.getMonth(),
+        date_info.getDate() + 1 // ← Ajuste aqui
+      );
+
+      return correctedDate;
+    }
+
+    function excelTimeToHoraMin(decimal) {
+      if (typeof decimal !== "number") return "00h00";
+      const totalMinutes = Math.round(decimal * 24 * 60);
+      const h = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+      const m = (totalMinutes % 60).toString().padStart(2, '0');
+      return `${h}h${m}`;
+    }
+
+    function converterParaFormatoInterno(planilha) {
+      const diasSemanaMap = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
+
+      const funcoesArray = [
+        {id: 11, descricao:  'Cerimoniário'},
+        {id: 0,  descricao:  'Librífero'},
+        {id: 1,  descricao:  'Ambão'},
+        {id: 2,  descricao:  'Credência'},
+        {id: 3,  descricao:  'Manustérgio'},
+        {id: 4,  descricao:  'Turiferário'},
+        {id: 5,  descricao:  'Naviculário'},
+        {id: 6,  descricao:  'Carrilhão'},
+        {id: 7,  descricao:  '1ª Leitura'},
+        {id: 8,  descricao:  '2ª Leitura'},
+        {id: 9,  descricao:  'Preces'},
+        {id: 10, descricao:  'Cestinha'}
+      ];
+
+      const descToId = Object.fromEntries(funcoesArray.map(f => [f.descricao.toLowerCase(), f.id]));
+      const dias = [];
+      let firstDate = null;
+
+      for (let row of planilha) {
+        if (!row["Data"] || !row["Nome"] || !row["Função"] || !row["Local"]) continue;
+
+        const data = typeof row["Data"] === "number" ? excelDateToJSDate(row["Data"]) : new Date(row["Data"]);
+        if (!firstDate || data < firstDate) firstDate = data;
+        const dia = data.getDate();
+        const d_sem = diasSemanaMap[data.getDay()] || "seg";
+        const horario = excelTimeToHoraMin(row["Início"]);
+        const local = row["Local"];
+        const nome = row["Nome"];
+        const funcao = row["Função"].toLowerCase().trim();
+        const id = descToId[funcao] ?? -1;
+
+        let diaObj = dias.find(d => d.dia === dia);
+        if (!diaObj) {
+          diaObj = { dia, d_sem, events: [] };
+          dias.push(diaObj);
+        }
+diaObj.ano = data.getFullYear();
+diaObj.mes = data.getMonth();
+
+        let evento = diaObj.events.find(e => e.local === local && e.horario === horario);
+        if (!evento) {
+          evento = { local, horario, funcoes: [] };
+          diaObj.events.push(evento);
+        }
+
+        evento.funcoes.push({ nome, id });
+      }
+
+      if (firstDate) {
+        const ano = firstDate.getFullYear();
+        const mes = firstDate.getMonth();
+        const totalDias = new Date(ano, mes + 1, 0).getDate();
+        const completados = [];
+
+        for (let i = 1; i <= totalDias; i++) {
+          if (!dias.find(d => d.dia === i)) {
+            const fakeDate = new Date(ano, mes, i);
+            dias.push({
+              dia: i,
+              d_sem: diasSemanaMap[fakeDate.getDay()],
+              events: []
+            });
+          }
+        }
+      }
+
+      return dias.sort((a, b) => a.dia - b.dia);
+    }
+</script>
+
+<script>
+// ======= scale.js embutido =======
+const funcoesArray = [
+  {id: 11, descricao:  'Cerimoniário', color:'#6d6d6d' },
+  {id: 0,  descricao:  'Librífero', color: '#0EA54C'},
+  {id: 1,  descricao:  'Ambão', color:'#d50201'},
+  {id: 2,  descricao:  'Credência', color:  '#0066FF'},
+  {id: 3,  descricao:  'Manustérgio', color: '#0066FF'},
+  {id: 4,  descricao:  'Turiferário', color:  '#000000'},
+  {id: 5,  descricao:  'Naviculário', color:  '#5FE1F5'},
+  {id: 6,  descricao:  'Carrilhão', color:  '#F5562A'},
+  {id: 7,  descricao:  '1ª Leitura', color:'#EAA812' },
+  {id: 8,  descricao:  '2ª Leitura', color:'#87039B' },
+  {id: 9,  descricao:  'Preces', color:'#634133' },
+  {id: 10, descricao:  'Cestinha', color:'#E802A3' },
+];
+
+function generateCalendar(array) {
+  const grupo = document.getElementById('grupoSelect').value;
+  const cores = gruposCores[grupo];
+  
+  array = array.sort((a, b) => a.dia - b.dia);
+  let html = `<div class="row log" >
+          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">seg</h2>
+          </div>
+          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">ter</h2>
+          </div>
+          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">qua</h2>
+          </div>
+          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">qui</h2>
+          </div>
+          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">sex</h2>
+          </div>
+          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">sab</h2>
+          </div>
+          <div class="col-4 text-center semana" style="width: 40% !important; background: ${cores.semanaBg}; color: ${cores.semanaText}">
+            <h2 class="text-uppercase header">dom</h2>
+          </div>
+          </div>`;
+  let pageHtml = document.getElementById('dados');
+  pageHtml.innerHTML = `<h3 class="text-center py-2" style="background-color: ${cores.headerBg}; color: ${cores.headerText}; font-weight: bold; border-radius: 4px;" id="tituloDisplay">${document.getElementById('tituloDisplay').innerText}</h3>`;
+  
+const diasSemana = [ 'seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom' ];
+const ordem = [1, 2, 3, 4, 5, 6, 0]; // segunda = 0, domingo = 6
+
+const primeiroDia = array.find(d => d.dia === 1);
+const dataInicial = new Date(primeiroDia.ano, primeiroDia.mes, 1);
+const primeirodia = ordem.indexOf(dataInicial.getDay());
+
+  const ultimoDia = diasSemana.findIndex(p => p == array[array.length-1].d_sem);
+debugger
+ if (primeirodia > 0 &&primeirodia != 2) {
+  html += '<div class="row mymodal isP">';
+  for (let i = 0; i < primeirodia; i++) {
+    html += '<div class="col text-center mycard" style="opacity:0">';
+    html += '<h2 class="text-uppercase day">01</h2>';
+    html += '<h2 class="text-uppercase local">São Miguel <br> 19h</h2>';
+    html += '<div class="col text-center event">';
+    html += '<h2 class="names"></h2>';
+    html += '<h2 class="names"></h2>';
+    html += '<h2 class="names"></h2>';
+    html += '</div></div>';
+  }
+}
+
+  for (const dia of array) {
+    let ismax = dia.dia == 6 ? 'Ismax' : '';
+    let isPlus = dia.dia == 1 && dia.d_sem == 'seg';
+    html += dia.d_sem == 'seg' ? `</div><div class="row mymodal ${isPlus ? 'isPlus' : ''}">` : '';
+    html += dia.d_sem == 'dom'
+      ? '<div class="col-4 text-center mycard" style="width: 40% !important;  color: ' + cores.diaText + '">'
+      : `<div class="col text-center mycard ${ismax}" style="color: ${cores.diaText}">`;
+
+    html += `<h2 class="text-uppercase day" style="background: ${cores.headerBg};">${dia.dia}</h2>`;
+    if (dia.d_sem == 'dom') html += '<div class="row especial">';
+
+    if (dia.events.length === 0) {
+      html += '<h2 class="text-uppercase local" style="opacity:0"></h2>';
+      html += '<div class="col text-center event">';
+      html += '<h2 class="names"></h2>'.repeat(3);
+      html += '</div>';
+      if (dia.d_sem == 'dom') html += '</div>';
+      html += '</div>';
+      continue;
+    }
+
+    let cont = 0;
+    for (const event of dia.events) {
+      if (dia.d_sem != 'dom') {
+        html += `<h2 class="text-uppercase local">${event.local}<br>${event.horario}</h2>`;
+      } else {
+        let colSize = '6';
+        if (dia.events.length == 3 || dia.events.length == 5) colSize = '4';
+        if (dia.events.length == 1) colSize = '12';
+        html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${event.horario}</h2>`;
+      }
+
+      let style = dia.events.length == 2 ? 'style="height: auto !important; margin-bottom: 10px;"' : '';
+      html += `<div class="col text-center event" ${style}>`;
+
+      let contFun = 0;
+      for (const funcoes of event.funcoes) {
+        html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
+        contFun++;
+      }
+      html += '</div>';
+      if (dia.d_sem == 'dom') html += '</div>';
+      cont++;
+    }
+    if (dia.d_sem == 'dom') html += '</div>';
+    html += '</div>';
+  }
+if(ultimoDia!=6){
+        let qtd = 0
+        switch(ultimoDia){
+            case 0 :
+            qtd = 5
+            break
+            case 1 :
+            qtd = 4
+            break
+            case 2:
+            qtd = 3
+            break
+            case 3 :
+            qtd = 2
+            break
+            case 4 :
+            qtd = 1
+            break
+        }
+        // debugger
+        for(let i=0; i<qtd; i++){
+            html+= '<div class="col text-center mycard" style="opacity:0"> '
+            html+= '<h2 class="text-uppercase day">01</h2>'
+            html+= '<h2 class="text-uppercase local" >São Miguel <br> 19h</h2>'
+            html+=  ' <div class="col text-center event">'
+            html+= ' <h2 class="names">jsdsj</h2>' 
+            html+= ' <h2 class="names">jsdsj</h2>'
+            html+= ' <h2 class="names">jsdsj</h2>'
+            html+= ' </div>'
+            html+=  '</div>'
+        }
+    
+       html += '<div class="col-4 text-center mycard  " style="opacity:0; width: 40% !important;">'
+       html += '<h2 class="text-uppercase day"></h2>'
+       html += '<div class="row especial">'
+       html += '  <div class="col-6">'
+       html += '    <h2 class="text-uppercase local" >Frei - 19h</h2>'
+       html += '    <div class="col text-center event">'
+       html += '      <h2 class="names">jsdsj</h2>'
+       html += '      <h2 class="names">jsdsj</h2>'
+       html += '  </div>'
+       html += '  </div>'
+       html += '  </div>'
+    }
+
+  html += '</div></div>';
+
+  html += '<div class="row mt-4 mb-5">';
+  for (const fun of funcoesArray) {
+    if (fun.id != 3) {
+      html += '<div class="col-2 mb-1">';
+      html += `<div class="row" style="color: white; text-transform: uppercase; border-radius: 5px; margin-right: 3px; background: ${fun.color}">`;
+      html += `<h2 style="font-size: 25px; margin: auto; padding: 15px; margin-left: 5px;">${fun.descricao}</h2>`;
+      html += '</div></div>';
+    }
+  }
+  html += '</div>';
+  pageHtml.innerHTML += html;
+}
+
+function editar(element) {
+  let code = element.getAttribute('data-cod').split('/')
+  let calendar = JSON.parse(localStorage.getItem('escala'))
+  calendar[code[0]-1].events[code[1]].funcoes[code[2]].name = 'teste'
+  localStorage.setItem('escalaCards', JSON.stringify(calendar))
+  localStorage.setItem('escala', JSON.stringify(calendar))
+  generateCalendar(calendar)
+}
+</script>
+
+</body>
+</html>
