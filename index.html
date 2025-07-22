@@ -375,6 +375,7 @@ debugger
 
       let contFun = 0;
       for (const funcoes of event.funcoes) {
+        console.log(funcoes);
         html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
         contFun++;
       }
