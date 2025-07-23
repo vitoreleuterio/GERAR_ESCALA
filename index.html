@@ -367,6 +367,7 @@ debugger
       } else {
         let colSize = '6';
         if (dia.events.length == 3 && event.local != 'Paróquia') colSize='3'
+        if (dia.events.length == 3 ) colSize='6'
         if(dia.events.length == 5) colSize = '4';
         if (dia.events.length == 1) colSize = '12';
         html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${event.horario}</h2>`;
