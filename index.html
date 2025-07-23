@@ -80,7 +80,8 @@
     };
 
     function mudarGrupo() {
-      const grupo = document.getElementById('grupoSelect').value;
+      let grupo = document.getElementById('grupoSelect').value;
+      if(grupo == 'acolitos') grupo = 'Acólitos'
       document.getElementById('tituloDisplay').innerText = `ESCALA DE ${grupo.toUpperCase()}`;
       
       // Aplicar as cores quando gerar o calendário
@@ -339,7 +340,7 @@ debugger
 }
 
   for (const dia of array) {
-    let ismax = dia.dia == 0 ? 'Ismax' : '';
+    let ismax = dia.dia == 34 ? 'Ismax' : '';
     let isPlus = dia.dia == 1 && dia.d_sem == 'seg';
     html += dia.d_sem == 'seg' ? `</div><div class="row mymodal ${isPlus ? 'isPlus' : ''}">` : '';
     html += dia.d_sem == 'dom'
@@ -365,20 +366,39 @@ debugger
         html += `<h2 class="text-uppercase local">${event.local}<br>${event.horario}</h2>`;
       } else {
         let colSize = '6';
-        if (dia.events.length == 3 || dia.events.length == 5) colSize = '4';
+        if (dia.events.length == 3 && event.local != 'Paróquia') colSize='3'
+        if(dia.events.length == 5) colSize = '4';
         if (dia.events.length == 1) colSize = '12';
         html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${event.horario}</h2>`;
       }
 
       let style = dia.events.length == 2 ? 'style="height: auto !important; margin-bottom: 10px;"' : '';
+
+       if(event.funcoes.length>5){
+            html+= '<div class="d-flex justify-content-around"/><div class="col-6 text-center event "  '+style+'>'
+            let contFun = 0
+            for(const funcoes of event.funcoes){
+               
+                 html+=  '<h2 onblur=editar(this)   contenteditable class="names" style="color:'+funcoesArray.find(p=> p.id == funcoes.id).color+';" data-name='+funcoes.nome+'  data-cod='+dia.dia+'/'+cont+'/'+contFun+'  >'+funcoes.nome+ '</h2>'
+                 contFun++
+          
+                 if(contFun==7){
+             html+=  '</div><div class="col-6 text-center event "  '+style+'>'
+             }
+            }
+              html += '</div>';
+          }
+
+          else{
       html += `<div class="col text-center event" ${style}>`;
 
+        
       let contFun = 0;
       for (const funcoes of event.funcoes) {
-        console.log(funcoes);
         html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
         contFun++;
       }
+    }
       html += '</div>';
       if (dia.d_sem == 'dom') html += '</div>';
       cont++;
