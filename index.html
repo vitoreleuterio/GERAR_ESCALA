@@ -339,7 +339,7 @@ debugger
 }
 
   for (const dia of array) {
-    let ismax = dia.dia == 6 ? 'Ismax' : '';
+    let ismax = dia.dia == 0 ? 'Ismax' : '';
     let isPlus = dia.dia == 1 && dia.d_sem == 'seg';
     html += dia.d_sem == 'seg' ? `</div><div class="row mymodal ${isPlus ? 'isPlus' : ''}">` : '';
     html += dia.d_sem == 'dom'
