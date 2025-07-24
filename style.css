@@ -186,9 +186,12 @@ line-height: normal;
         align-items: center;
     }
     .names  {
-        font-size: 26px;    
+        font-size: 22px;    
+        
+white-space: nowrap;
+width: 100%;
         text-transform: uppercase;
-        padding: 0.2px 1px 0px 1px;
+        padding: 0.2px 0.7px 0px 1px;
     margin-bottom: 1.5px !important;
     font-style: normal;
 font-weight: 750;
