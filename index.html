@@ -101,21 +101,22 @@ const funcoesArrayDatashow = [
         semanaText: '#ffffff'
       },
       datashow: {
-        headerBg: '#dc3545',
+        headerBg: '#006FB3',
         headerText: '#ffffff',
-        diaBg: '#f8d7da',
-        diaText: '#dc3545',
-        semanaBg: '#dc3545',
-        semanaText: '#ffffff'
+        diaBg: '#006FB3',
+        diaText: '#fff',
+        semanaBg: '#ECECEC',
+        semanaText: '#002459'
       }
     };
 
     function mudarGrupo() {
       let grupo = document.getElementById('grupoSelect').value;
-      if(grupo == 'acolitos') grupo = 'Acólitos'
-      if(grupo == 'coroinhas') grupo = 'Coroinhas e Anjinhos'
+      if(grupo == 'acolitos') grupo = 'DE Acólitos'
+      if(grupo == 'coroinhas') grupo = 'DE Coroinhas e Anjinhos'
+      if(grupo == 'datashow') grupo = 'DO DATASHOW'
 
-      document.getElementById('tituloDisplay').innerText = `ESCALA DE ${grupo.toUpperCase()}`;
+      document.getElementById('tituloDisplay').innerText = `ESCALA ${grupo.toUpperCase()}`;
       
       // Aplicar as cores quando gerar o calendário
       if (localStorage.getItem('escala')) {
@@ -283,8 +284,11 @@ diaObj.mes = data.getMonth();
         for (let i = 1; i <= totalDias; i++) {
           if (!dias.find(d => d.dia === i)) {
             const fakeDate = new Date(ano, mes, i);
+            debugger
             dias.push({
               dia: i,
+              mes: mes,
+              ano: ano,
               d_sem: diasSemanaMap[fakeDate.getDay()],
               events: []
             });
@@ -302,182 +306,135 @@ diaObj.mes = data.getMonth();
 function generateCalendar(array) {
   const grupo = document.getElementById('grupoSelect').value;
   const cores = gruposCores[grupo];
-  let funcoesArray = []
-      if(grupo == 'coroinhas'){
-            funcoesArray = funcoesArrayCoroinha
-      }
-       if(grupo == 'acolitos'){
-            funcoesArray = funcoesArrayAcolitos
-      }
-       if(grupo == 'datashow'){
-            funcoesArray = funcoesArrayDatashow
-      }
+  let funcoesArray = [];
+
+  if (grupo == 'coroinhas') funcoesArray = funcoesArrayCoroinha;
+  if (grupo == 'acolitos') funcoesArray = funcoesArrayAcolitos;
+  if (grupo == 'datashow') funcoesArray = funcoesArrayDatashow;
+
   array = array.sort((a, b) => a.dia - b.dia);
-  let html = `<div class="row log" >
-          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">seg</h2>
-          </div>
-          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">ter</h2>
-          </div>
-          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">qua</h2>
-          </div>
-          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">qui</h2>
-          </div>
-          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">sex</h2>
-          </div>
-          <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">sab</h2>
-          </div>
-          <div class="col-4 text-center semana" style="width: 40% !important; background: ${cores.semanaBg}; color: ${cores.semanaText}">
-            <h2 class="text-uppercase header">dom</h2>
-          </div>
-          </div>`;
-  let pageHtml = document.getElementById('dados');
-  pageHtml.innerHTML = `<h3 class="text-center py-2" style="background-color: ${cores.headerBg}; color: ${cores.headerText}; font-weight: bold; border-radius: 4px;" id="tituloDisplay">${document.getElementById('tituloDisplay').innerText}</h3>`;
-  
-const diasSemana = [ 'seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom' ];
-const ordem = [1, 2, 3, 4, 5, 6, 0]; // segunda = 0, domingo = 6
 
-const primeiroDia = array.find(d => d.dia === 1);
-const dataInicial = new Date(primeiroDia.ano, primeiroDia.mes, 1);
-const primeirodia = ordem.indexOf(dataInicial.getDay());
+  const pageHtml = document.getElementById('dados');
+  const diasSemana = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
 
-  const ultimoDia = diasSemana.findIndex(p => p == array[array.length-1].d_sem);
-debugger
- if (primeirodia > 0 &&primeirodia != 2) {
-  html += '<div class="row mymodal isP">';
-  for (let i = 0; i < primeirodia; i++) {
-    html += '<div class="col text-center mycard" style="opacity:0">';
-    html += '<h2 class="text-uppercase day">01</h2>';
-    html += '<h2 class="text-uppercase local">São Miguel <br> 19h</h2>';
-    html += '<div class="col text-center event">';
-    html += '<h2 class="names"></h2>';
-    html += '<h2 class="names"></h2>';
-    html += '<h2 class="names"></h2>';
-    html += '</div></div>';
+  // Cabeçalho
+  let html = `<div class="row log" style="display:flex;">`;
+  for (let i = 0; i < 7; i++) {
+    const isDom = diasSemana[i] == 'dom';
+    const width = isDom ? '37%' : '10%';
+    html += `
+      <div class="text-center semana" style="width:${width}; min-width:${width}; max-width:${width}; background: ${cores.semanaBg}; color: ${cores.semanaText}">
+        <h2 class="text-uppercase header">${diasSemana[i]}</h2>
+      </div>
+    `;
   }
-}
+  html += '</div>';
 
+  const base = array[0];
+  const ano = base.ano;
+  const mes = base.mes;
+
+  const dataInicial = new Date(ano, mes, 1);
+  const primeirodia = (dataInicial.getDay())-1; // 0=dom
+  const dataFinal = new Date(ano, mes + 1, 0);
+  const ultimoDia = dataFinal.getDay();
+  // Dias vazios no início
+  if (primeirodia > 0) {
+    html += '<div class="row mymodal" style="display: flex;">';
+    for (let i = 0; i < primeirodia; i++) {
+      const width = (i == 6) ? '37%' : '10%';
+      html += `<div class="text-center mycard" style="width:${width}; min-width:${width}; max-width:${width}; visibility:hidden;">`;
+      html += '<h2 class="text-uppercase day">00</h2>';
+      html += '<h2 class="text-uppercase local">---</h2>';
+      html += '<div class="event">';
+      html += '<h2 class="names">---</h2>'.repeat(3);
+      html += '</div></div>';
+    }
+  }
+
+  // Dias reais
   for (const dia of array) {
-    let ismax = dia.dia == 34 ? 'Ismax' : '';
-    let isPlus = dia.dia == 1 && dia.d_sem == 'seg';
-    html += dia.d_sem == 'seg' ? `</div><div class="row mymodal ${isPlus ? 'isPlus' : ''}">` : '';
-    html += dia.d_sem == 'dom'
-      ? '<div class="col-4 text-center mycard" style="width: 40% !important;  color: ' + cores.diaText + '">'
-      : `<div class="col text-center mycard ${ismax}" style="color: ${cores.diaText}">`;
+    const isInicioSemana = dia.d_sem == 'seg';
+    if (isInicioSemana) html += '</div><div class="row mymodal" style="display: flex;">';
 
+    const isDomingo = dia.d_sem == 'dom';
+    const width = isDomingo ? '37%' : '10%';
+
+    html += `<div class="text-center mycard" style="width:${width}; min-width:${width}; max-width:${width}; color:${cores.diaText}">`;
     html += `<h2 class="text-uppercase day" style="background: ${cores.headerBg};">${dia.dia}</h2>`;
-    if (dia.d_sem == 'dom') html += '<div class="row especial">';
+
+    if (isDomingo) html += '<div class="row especial">';
 
     if (dia.events.length === 0) {
       html += '<h2 class="text-uppercase local" style="opacity:0"></h2>';
-      html += '<div class="col text-center event">';
-      html += '<h2 class="names"></h2>'.repeat(3);
+      html += '<div class="col text-center event" style="opacity:0;">';
+      html += '<h2 class="names">---</h2>'.repeat(3);
       html += '</div>';
-      if (dia.d_sem == 'dom') html += '</div>';
+      if (isDomingo) html += '</div>';
       html += '</div>';
       continue;
     }
 
     let cont = 0;
     for (const event of dia.events) {
-      if (dia.d_sem != 'dom') {
+      if (!isDomingo) {
         html += `<h2 class="text-uppercase local">${event.local}<br>${event.horario}</h2>`;
       } else {
         let colSize = '6';
-        if (dia.events.length == 3 && event.local != 'Paróquia') colSize='3'
-        if (dia.events.length == 3 ) colSize='6'
-        if(dia.events.length == 5) colSize = '4';
+        if (dia.events.length == 3 && event.local != 'Paróquia') colSize = '3';
+        if (dia.events.length == 3) colSize = '6';
+        if (dia.events.length == 5) colSize = '4';
         if (dia.events.length == 1) colSize = '12';
         html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${event.horario}</h2>`;
       }
 
       let style = dia.events.length == 2 ? 'style="height: auto !important; margin-bottom: 10px;"' : '';
-
-       if(event.funcoes.length>5){
-            html+= '<div class="d-flex justify-content-around"/><div class="col-6 text-center event "  '+style+'>'
-            let contFun = 0
-            for(const funcoes of event.funcoes){
-               
-                 html+=  '<h2 onblur=editar(this)   contenteditable class="names" style="color:'+funcoesArray.find(p=> p.id == funcoes.id).color+';" data-name='+funcoes.nome+'  data-cod='+dia.dia+'/'+cont+'/'+contFun+'  >'+funcoes.nome+ '</h2>'
-                 contFun++
-          
-                 if(contFun==7){
-             html+=  '</div><div class="col-6 text-center event "  '+style+'>'
-             }
-            }
-              html += '</div>';
+      if (event.funcoes.length > 5) {
+        html += '<div class="d-flex justify-content-around"><div class="col-6 text-center event" ' + style + '>';
+        let contFun = 0;
+        for (const funcoes of event.funcoes) {
+          html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
+          contFun++;
+          if (contFun == 7) {
+            html += '</div><div class="col-6 text-center event" ' + style + '>';
           }
-
-          else{
-      html += `<div class="col text-center event" ${style}>`;
-
-        
-      let contFun = 0;
-      for (const funcoes of event.funcoes) {
-        html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
-        contFun++;
+        }
+        html += '</div>';
+      } else {
+        html += `<div class="col text-center event" ${style}>`;
+        let contFun = 0;
+        for (const funcoes of event.funcoes) {
+          html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
+          contFun++;
+        }
+        html += '</div>';
       }
-    }
-      html += '</div>';
-      if (dia.d_sem == 'dom') html += '</div>';
+
+      if (isDomingo) html += '</div>';
       cont++;
     }
-    if (dia.d_sem == 'dom') html += '</div>';
+
+    if (isDomingo) html += '</div>';
     html += '</div>';
   }
-if(ultimoDia!=6){
-        let qtd = 0
-        switch(ultimoDia){
-            case 0 :
-            qtd = 5
-            break
-            case 1 :
-            qtd = 4
-            break
-            case 2:
-            qtd = 3
-            break
-            case 3 :
-            qtd = 2
-            break
-            case 4 :
-            qtd = 1
-            break
-        }
-        // debugger
-        for(let i=0; i<qtd; i++){
-            html+= '<div class="col text-center mycard" style="opacity:0"> '
-            html+= '<h2 class="text-uppercase day">01</h2>'
-            html+= '<h2 class="text-uppercase local" >São Miguel <br> 19h</h2>'
-            html+=  ' <div class="col text-center event">'
-            html+= ' <h2 class="names">jsdsj</h2>' 
-            html+= ' <h2 class="names">jsdsj</h2>'
-            html+= ' <h2 class="names">jsdsj</h2>'
-            html+= ' </div>'
-            html+=  '</div>'
-        }
-    
-       html += '<div class="col-4 text-center mycard  " style="opacity:0; width: 40% !important;">'
-       html += '<h2 class="text-uppercase day"></h2>'
-       html += '<div class="row especial">'
-       html += '  <div class="col-6">'
-       html += '    <h2 class="text-uppercase local" >Frei - 19h</h2>'
-       html += '    <div class="col text-center event">'
-       html += '      <h2 class="names">jsdsj</h2>'
-       html += '      <h2 class="names">jsdsj</h2>'
-       html += '  </div>'
-       html += '  </div>'
-       html += '  </div>'
+
+  // Dias vazios no fim
+  debugger
+  if (ultimoDia != 0) {
+    html += '</div><div class="row mymodal" style="display: flex;">';
+    const qtd = 6 - ultimoDia;
+    for (let i = 0; i < qtd; i++) {
+      html += `<div class="text-center mycard" style="width:10%; min-width:10%; max-width:10%; visibility:hidden;">`;
+      html += '<h2 class="text-uppercase day">00</h2>';
+      html += '<h2 class="text-uppercase local">---</h2>';
+      html += '<div class="event">';
+      html += '<h2 class="names">---</h2>'.repeat(3);
+      html += '</div></div>';
     }
+  }
 
-  html += '</div></div>';
-
-  html += '<div class="row mt-4 mb-5">';
+  // Legenda
+  html += '</div><div class="row mt-4 mb-5">';
   for (const fun of funcoesArray) {
     if (fun.id != 3) {
       html += '<div class="col-2 mb-1">';
@@ -487,13 +444,18 @@ if(ultimoDia!=6){
     }
   }
   html += '</div>';
-  pageHtml.innerHTML += html;
+
+  // Aplicar
+  pageHtml.innerHTML = `
+    <h3 class="text-center py-2" style="background-color: ${cores.headerBg}; color: ${cores.headerText}; font-weight: bold; border-radius: 4px;" id="tituloDisplay">${document.getElementById('tituloDisplay').innerText}</h3>
+    ${html}
+  `;
 }
 
 function editar(element) {
   let code = element.getAttribute('data-cod').split('/')
   let calendar = JSON.parse(localStorage.getItem('escala'))
-  calendar[code[0]-1].events[code[1]].funcoes[code[2]].name = 'teste'
+  calendar[code[0]-1].events[code[1]].funcoes[code[2]].name = 'ALEXAND '
   localStorage.setItem('escalaCards', JSON.stringify(calendar))
   localStorage.setItem('escala', JSON.stringify(calendar))
   generateCalendar(calendar)
