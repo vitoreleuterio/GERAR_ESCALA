@@ -51,6 +51,37 @@
 </div>
 
 <script>
+  const funcoesArrayCoroinha = [
+  {id: 11, descricao:  'Anjinho', color:'#77181e' },
+  {id: 0,  descricao:  'Librífero', color: '#0EA54C'},
+  {id: 1,  descricao:  'Ambão', color:'#d50201'},
+  {id: 2,  descricao:  'Credência', color:  '#0066FF'},
+  {id: 3,  descricao:  'Manustérgio', color: '#0066FF'},
+  {id: 4,  descricao:  'Turiferário', color:  '#000000'},
+  {id: 5,  descricao:  'Naviculário', color:  '#69a2a8'},
+  {id: 6,  descricao:  'Carrilhão', color:  '#F5562A'},
+  {id: 7,  descricao:  '1ª Leitura', color:'#EAA812' },
+  {id: 8,  descricao:  '2ª Leitura', color:'#87039B' },
+  {id: 9,  descricao:  'Preces', color:'#634133' },
+  {id: 10, descricao:  'Cestinha', color:'#E802A3' },
+];
+const funcoesArrayAcolitos = [
+  {id: 11, descricao:  'Cerimoniário', color:'#77181e' },
+  {id: 0,  descricao:  'Librífero', color: '#0EA54C'},
+  {id: 1,  descricao:  'Ambão', color:'#d50201'},
+  {id: 2,  descricao:  'Credência', color:  '#0066FF'},
+  {id: 3,  descricao:  'Manustérgio', color: '#0066FF'},
+  {id: 4,  descricao:  'Turiferário', color:  '#000000'},
+  {id: 5,  descricao:  'Naviculário', color:  '#69a2a8'},
+  {id: 6,  descricao:  'Carrilhão', color:  '#F5562A'},
+  {id: 7,  descricao:  '1ª Leitura', color:'#EAA812' },
+  {id: 8,  descricao:  '2ª Leitura', color:'#87039B' },
+  {id: 9,  descricao:  'Preces', color:'#634133' },
+  {id: 10, descricao:  'Cestinha', color:'#E802A3' },
+];
+const funcoesArrayDatashow = [
+  {id: 1,  descricao:  'Escalado', color:'#d50201'},
+];
     // Cores para cada grupo
     const gruposCores = {
       acolitos: {
@@ -82,6 +113,8 @@
     function mudarGrupo() {
       let grupo = document.getElementById('grupoSelect').value;
       if(grupo == 'acolitos') grupo = 'Acólitos'
+      if(grupo == 'coroinhas') grupo = 'Coroinhas e Anjinhos'
+
       document.getElementById('tituloDisplay').innerText = `ESCALA DE ${grupo.toUpperCase()}`;
       
       // Aplicar as cores quando gerar o calendário
@@ -196,22 +229,17 @@
 
     function converterParaFormatoInterno(planilha) {
       const diasSemanaMap = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
-
-      const funcoesArray = [
-        {id: 11, descricao:  'Cerimoniário'},
-        {id: 0,  descricao:  'Librífero'},
-        {id: 1,  descricao:  'Ambão'},
-        {id: 2,  descricao:  'Credência'},
-        {id: 3,  descricao:  'Manustérgio'},
-        {id: 4,  descricao:  'Turiferário'},
-        {id: 5,  descricao:  'Naviculário'},
-        {id: 6,  descricao:  'Carrilhão'},
-        {id: 7,  descricao:  '1ª Leitura'},
-        {id: 8,  descricao:  '2ª Leitura'},
-        {id: 9,  descricao:  'Preces'},
-        {id: 10, descricao:  'Cestinha'}
-      ];
-
+      const grupo = document.getElementById('grupoSelect').value;
+      let funcoesArray = []
+      if(grupo == 'coroinhas'){
+            funcoesArray = funcoesArrayCoroinha
+      }
+       if(grupo == 'acolitos'){
+            funcoesArray = funcoesArrayAcolitos
+      }
+       if(grupo == 'datashow'){
+            funcoesArray = funcoesArrayDatashow
+      }
       const descToId = Object.fromEntries(funcoesArray.map(f => [f.descricao.toLowerCase(), f.id]));
       const dias = [];
       let firstDate = null;
@@ -270,25 +298,20 @@ diaObj.mes = data.getMonth();
 
 <script>
 // ======= scale.js embutido =======
-const funcoesArray = [
-  {id: 11, descricao:  'Cerimoniário', color:'#77181e' },
-  {id: 0,  descricao:  'Librífero', color: '#0EA54C'},
-  {id: 1,  descricao:  'Ambão', color:'#d50201'},
-  {id: 2,  descricao:  'Credência', color:  '#0066FF'},
-  {id: 3,  descricao:  'Manustérgio', color: '#0066FF'},
-  {id: 4,  descricao:  'Turiferário', color:  '#000000'},
-  {id: 5,  descricao:  'Naviculário', color:  '#69a2a8'},
-  {id: 6,  descricao:  'Carrilhão', color:  '#F5562A'},
-  {id: 7,  descricao:  '1ª Leitura', color:'#EAA812' },
-  {id: 8,  descricao:  '2ª Leitura', color:'#87039B' },
-  {id: 9,  descricao:  'Preces', color:'#634133' },
-  {id: 10, descricao:  'Cestinha', color:'#E802A3' },
-];
 
 function generateCalendar(array) {
   const grupo = document.getElementById('grupoSelect').value;
   const cores = gruposCores[grupo];
-  
+  let funcoesArray = []
+      if(grupo == 'coroinhas'){
+            funcoesArray = funcoesArrayCoroinha
+      }
+       if(grupo == 'acolitos'){
+            funcoesArray = funcoesArrayAcolitos
+      }
+       if(grupo == 'datashow'){
+            funcoesArray = funcoesArrayDatashow
+      }
   array = array.sort((a, b) => a.dia - b.dia);
   let html = `<div class="row log" >
           <div class="col text-center semana" style="background: ${cores.semanaBg}; color: ${cores.semanaText}">
