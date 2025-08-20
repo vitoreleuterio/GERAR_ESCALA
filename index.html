@@ -19,7 +19,12 @@
   </style>
 </head>
 <body style="background: #FFF;">
-
+<div id="loading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Gerando imagem...</span>
+  </div>
+  <p class="mt-2">Gerando imagem, aguarde...</p>
+</div>
 <div class="container-fluid mt-3" style=" margin-left: auto; width: 2000px;">
   <div class="row mb-3">
     <div class="col-md-3">
@@ -124,59 +129,88 @@ const funcoesArrayDatashow = [
       }
     }
 
-    function gerarPNG(div) {
-      const element = document.getElementById(div);
-       const grupo = document.getElementById('grupoSelect').value;
-       const tituloEscala = document.getElementById('tituloEscala').value;
-
-       tituloEscala
-      // Configurações de alta qualidade
-      const scale = 3; // Fator de escala (3x para imagens nítidas)
-      const dpi = 300; // Resolução para impressão
-      const backgroundColor = '#ffffff'; // Fundo branco para melhor contraste
-      
-      // Calcular dimensões
-      const width = element.offsetWidth * scale;
-      const height = element.offsetHeight * scale;
-
-      // Criar canvas
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-
-      // Opções do html2canvas
-      const options = {
-          canvas: canvas,
-          scale: scale,
-          dpi: dpi,
-          logging: true,
-          useCORS: true,
-          backgroundColor: backgroundColor,
-          letterRendering: true, // Crucial para texto nítido
-          allowTaint: true,
-          windowWidth: width,
-          windowHeight: height,
-          scrollX: 0,
-          scrollY: 0,
-          x: 0,
-          y: 0,
-          onclone: (clonedDoc) => {
-              // Garantir que o texto seja renderizado com fontes nítidas
-              clonedDoc.getElementById(div).style.fontSmoothing = 'antialiased';
-              clonedDoc.getElementById(div).style.webkitFontSmoothing = 'antialiased';
-          }
-      };
-
-      html2canvas(element, options).then(canvas => {
-          // Usar PNG para máxima qualidade (sem compressão)
-          const imgData = canvas.toDataURL("image/png", 2.0);
-          
-          const link = document.createElement("a");
-          link.download = grupo+'_'+tituloEscala+'.png'; // Formato PNG preserva qualidade
-          link.href = imgData;
-          link.click();
-      });
+   function gerarPNG(divId) {
+    const element = document.getElementById(divId);
+    const grupo = document.getElementById('grupoSelect').value;
+    const tituloEscala = document.getElementById('tituloEscala').value;
+    
+    if (!tituloEscala) {
+      alert('Por favor, digite o título da escala antes de baixar.');
+      return;
     }
+    
+    // Mostrar indicador de carregamento
+    document.getElementById('loading').style.display = 'block';
+    
+    // Dar tempo para a UI atualizar antes de capturar
+    setTimeout(() => {
+      // Obter a posição original para restaurar depois
+      const originalStyle = element.getAttribute('style');
+      
+      // Configurar o elemento para garantir captura completa
+      element.style.width = '1700px';
+      element.style.overflow = 'visible';
+      element.style.position = 'absolute';
+      element.style.left = '0';
+      element.style.top = '0';
+      
+      // Obter dimensões reais do conteúdo
+      const width = element.scrollWidth;
+      const height = element.scrollHeight;
+      
+      // Criar canvas com dimensões adequadas
+      const canvas = document.createElement('canvas');
+      canvas.width = width * 2; // Dobrar a resolução para melhor qualidade
+      canvas.height = height * 2;
+      
+      const options = {
+        canvas: canvas,
+        scale: 2, // Alta resolução
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: width,
+        height: height,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: function(clonedDoc) {
+          const clonedElement = clonedDoc.getElementById(divId);
+          clonedElement.style.width = width + 'px';
+          clonedElement.style.overflow = 'visible';
+        }
+      };
+      
+      html2canvas(element, options).then(canvas => {
+        // Restaurar estilo original
+        element.setAttribute('style', originalStyle);
+        
+        try {
+          const imgData = canvas.toDataURL('image/png');
+          
+          const link = document.createElement('a');
+          link.download = grupo + '_' + tituloEscala + '.png';
+          link.href = imgData;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (e) {
+          console.error('Erro ao criar imagem:', e);
+          alert('Erro ao gerar a imagem. Tente novamente.');
+        } finally {
+          // Esconder indicador de carregamento
+          document.getElementById('loading').style.display = 'none';
+        }
+      }).catch(error => {
+        console.error('Erro no html2canvas:', error);
+        alert('Erro ao capturar a escala. Tente novamente.');
+        document.getElementById('loading').style.display = 'none';
+        // Restaurar estilo original em caso de erro
+        element.setAttribute('style', originalStyle);
+      });
+    }, 500);
+  }
   
     function carregarPlanilha() {
       const file = document.getElementById('fileUpload').files[0];
@@ -302,6 +336,26 @@ diaObj.mes = data.getMonth();
 
 <script>
 // ======= scale.js embutido =======
+function formatarHorario(horario) {
+    // Verifica se o horário está no formato esperado (ex: "19h30")
+    if (!horario || typeof horario !== 'string' || !horario.includes('h')) {
+        return horario; // Retorna o valor original se não estiver no formato esperado
+    }
+    
+    // Divide o horário em horas e minutos
+    const partes = horario.split('h');
+    const horas = partes[0];
+    const minutos = partes[1] || '';
+    
+    // Se não houver minutos ou os minutos forem "00", retorna apenas as horas
+    if (!minutos || minutos === '00') {
+        return `${horas}h`;
+    }
+    
+    // Caso contrário, retorna o horário completo
+    return `${horas}h${minutos}`;
+}
+
 
 function generateCalendar(array) {
   const grupo = document.getElementById('grupoSelect').value;
@@ -378,19 +432,24 @@ function generateCalendar(array) {
     let cont = 0;
     for (const event of dia.events) {
       if (!isDomingo) {
-        html += `<h2 class="text-uppercase local">${event.local}<br>${event.horario}</h2>`;
+        html += `<h2 class="text-uppercase local">${event.local}<br>${formatarHorario(event.horario)}</h2>`;
       } else {
         let colSize = '6';
+      if (dia.events.length == 2 && event.local == 'Paróquia') colSize = '7';
+      if (dia.events.length == 2 && event.local != 'Paróquia') colSize = '4';
+
         if (dia.events.length == 3 && event.local != 'Paróquia') colSize = '3';
         if (dia.events.length == 3) colSize = '6';
         if (dia.events.length == 5) colSize = '4';
+        if (dia.events.length == 5 && event.local =='Paróquia') colSize = '6';
+
         if (dia.events.length == 1) colSize = '12';
-        html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${event.horario}</h2>`;
+        html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${formatarHorario(event.horario)}</h2>`;
       }
 
       let style = dia.events.length == 2 ? 'style="height: auto !important; margin-bottom: 10px;"' : '';
       if (event.funcoes.length > 5) {
-        html += '<div class="d-flex justify-content-around"><div class="col-6 text-center event" ' + style + '>';
+        html += '<div class="d-flex justify-content-around"><div class="col-7 text-center event" ' + style + '>';
         let contFun = 0;
         for (const funcoes of event.funcoes) {
           html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
@@ -420,7 +479,8 @@ function generateCalendar(array) {
 
   // Dias vazios no fim
   debugger
-  if (ultimoDia != 0) {
+  debugger
+  if (ultimoDia != 0 && ultimoDia != 2) {
     html += '</div><div class="row mymodal" style="display: flex;">';
     const qtd = 6 - ultimoDia;
     for (let i = 0; i < qtd; i++) {
