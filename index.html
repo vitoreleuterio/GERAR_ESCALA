@@ -439,7 +439,7 @@ function generateCalendar(array) {
         let colSize = '6';
       if (dia.events.length == 2 && event.local == 'Paróquia') colSize = '7';
       if (dia.events.length == 2 && event.local != 'Paróquia') colSize = '4';
-
+   if (dia.events.length == 3 && event.local == 'Paróquia') colSize = '12';
         if (dia.events.length == 3 && event.local != 'Paróquia') colSize = '3';
         if (dia.events.length == 3) colSize = '6';
         if (dia.events.length == 5) colSize = '4';
@@ -526,6 +526,7 @@ function editar(element) {
 
 </body>
 </html>
+
 
 
 
