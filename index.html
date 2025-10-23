@@ -456,7 +456,7 @@ function generateCalendar(array) {
         for (const funcoes of event.funcoes) {
           html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
           contFun++;
-          if (contFun == 5) {
+          if (contFun == 4 || contFun == 8) {
             html += '</div><div class="col-6 text-center event" ' + style + '>';
           }
         }
@@ -526,5 +526,6 @@ function editar(element) {
 
 </body>
 </html>
+
 
 
