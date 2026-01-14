@@ -391,22 +391,25 @@ function generateCalendar(array) {
   const mes = base.mes;
 
   const dataInicial = new Date(ano, mes, 1);
-  const primeirodia = (dataInicial.getDay())-1; // 0=dom
+const primeirodia = (dataInicial.getDay() + 6) % 7;
   const dataFinal = new Date(ano, mes + 1, 0);
   const ultimoDia = dataFinal.getDay();
   // Dias vazios no início
   if (primeirodia > 0) {
-    html += '<div class="row mymodal" style="display: flex;">';
-    for (let i = 0; i < primeirodia; i++) {
-      const width = (i == 6) ? '37%' : '10%';
-      html += `<div class="text-center mycard" style="width:${width}; min-width:${width}; max-width:${width}; visibility:hidden;">`;
-      html += '<h2 class="text-uppercase day">00</h2>';
-      html += '<h2 class="text-uppercase local">---</h2>';
-      html += '<div class="event">';
-      html += '<h2 class="names">---</h2>'.repeat(3);
-      html += '</div></div>';
-    }
+  html += '<div class="row mymodal" style="display:flex;">';
+
+  for (let i = 0; i < primeirodia; i++) {
+    const width = (i == 6) ? '37%' : '10%';
+    html += `
+      <div class="text-center mycard"
+           style="width:${width}; min-width:${width}; max-width:${width}; visibility:hidden;">
+        <h2 class="day">00</h2>
+        <h2 class="local">---</h2>
+        <div class="event">${'<h2 class="names">---</h2>'.repeat(3)}</div>
+      </div>
+    `;
   }
+}
 
   // Dias reais
   for (const dia of array) {
@@ -529,6 +532,7 @@ function editar(element) {
 
 </body>
 </html>
+
 
 
 
