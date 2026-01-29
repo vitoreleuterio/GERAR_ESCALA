@@ -224,7 +224,7 @@ line-height: normal;
     }
    
     .mycard{
-        height:  450px;
+        height:  460px;
         background-color: #fff;
         color: #000;
         background: #FFF;
@@ -247,7 +247,7 @@ line-height: normal;
     }
 
     .isP, .isP .mycard{
-    height:450px !important;
+    height:460px !important;
     margin-bottom: 5px;
 
     }
@@ -411,3 +411,4 @@ i{
       width: 3rem;
       height: 3rem;
     }
+
