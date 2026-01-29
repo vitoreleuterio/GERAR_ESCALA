@@ -462,7 +462,7 @@ const primeirodia = (dataInicial.getDay() + 6) % 7;
         for (const funcoes of event.funcoes) {
           html += `<h2 onblur=editar(this) contenteditable class="names" style="color:${funcoesArray.find(p => p.id == funcoes.id).color};" data-name="${funcoes.nome}" data-cod="${dia.dia}/${cont}/${contFun}">${funcoes.nome}</h2>`;
           contFun++;
-          if (contFun == 5 || contFun == 10 || contFun == 15) {
+          if (contFun == 4 || contFun == 8 || contFun == 12 || contFun == 16) {
             html += '</div><div class="col-4 text-center event" ' + style + '>';
           }
         }
@@ -532,6 +532,7 @@ function editar(element) {
 
 </body>
 </html>
+
 
 
 
