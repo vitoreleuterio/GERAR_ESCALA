@@ -224,7 +224,7 @@ line-height: normal;
     }
    
     .mycard{
-        height:  470px;
+        height:  490px;
         background-color: #fff;
         color: #000;
         background: #FFF;
@@ -240,14 +240,14 @@ line-height: normal;
     .mymodal{
       background-color: #fff;
       /* height: 470px; */
-    height:470px !important;
+    height:490px !important;
 
       margin-top: 14px;
       
     }
 
     .isP, .isP .mycard{
-    height:470px !important;
+    height:490px !important;
     margin-bottom: 5px;
 
     }
@@ -411,5 +411,6 @@ i{
       width: 3rem;
       height: 3rem;
     }
+
 
 
