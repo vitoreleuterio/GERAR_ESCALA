@@ -240,7 +240,7 @@ line-height: normal;
     .mymodal{
       background-color: #fff;
       /* height: 470px; */
-    height:490px !important;
+    height:500px !important;
 
       margin-top: 14px;
       
@@ -411,6 +411,7 @@ i{
       width: 3rem;
       height: 3rem;
     }
+
 
 
 
