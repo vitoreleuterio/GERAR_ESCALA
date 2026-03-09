@@ -451,6 +451,7 @@ const primeirodia = (dataInicial.getDay() + 6) % 7;
          if (dia.events.length == 3 && event.local == 'Paróquia' && event.funcoes.length < 6) colSize = '6';
          if (dia.events.length == 3 && event.local == 'S. Miguel' && event.funcoes.length < 6) colSize = '6';
           if (dia.events.length == 3 && event.local == 'S. Miguel' && grupo == 'coroinhas') colSize = '12';
+        if(event.local == 'S. Miguel' ||  event.local == 'S. José' || event.local == 'Perpetuo')  colSize = '4';
         if (dia.events.length == 1) colSize = '12';
         html += `<div class="col-${colSize}"><h2 class="text-uppercase local">${event.local}-${formatarHorario(event.horario)}</h2>`;
       }
@@ -532,6 +533,7 @@ function editar(element) {
 
 </body>
 </html>
+
 
 
 
